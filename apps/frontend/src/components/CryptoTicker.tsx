@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { API_URL } from '../api';
 
 interface CryptoData {
   id: number;
@@ -18,9 +19,7 @@ export function CryptoTicker() {
 
   const fetchCryptoData = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
-      const response = await fetch(`${apiUrl}/crypto`);
+      const response = await fetch(`${API_URL}/crypto`);
 
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
@@ -82,8 +81,8 @@ export function CryptoTicker() {
               </span>
               <span
                 className={`text-xs font-semibold px-2 py-0.5 rounded ${isPositive
-                    ? 'bg-green-500/20 text-green-300'
-                    : 'bg-red-500/20 text-red-300'
+                  ? 'bg-green-500/20 text-green-300'
+                  : 'bg-red-500/20 text-red-300'
                   }`}
               >
                 {isPositive ? '+' : ''}
