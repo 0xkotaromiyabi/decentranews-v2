@@ -1,0 +1,13 @@
+{
+    "buildCommand": "pnpm install && cd apps/backend && npx prisma generate && cd ../frontend && pnpm run build",
+    "devCommand": "turbo run dev",
+    "installCommand": "pnpm install",
+    "outputDirectory": "apps/frontend/dist",
+    "framework": null,
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "/api/index"
+        }
+    ]
+}

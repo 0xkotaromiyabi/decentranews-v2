@@ -1,0 +1,14 @@
+[phases.setup]
+nixPkgs = ["nodejs", "pnpm"]
+[phases.install]
+cmds = [
+    "pnpm install --frozen-lockfile"
+]
+[phases.build]
+dependsOn = ["install"]
+cmds = [
+    "DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npx prisma generate",
+    "npx tsc"
+]
+[start]
+cmd = "npx prisma migrate deploy && node dist/index.js"

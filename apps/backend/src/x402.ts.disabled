@@ -1,0 +1,58 @@
+import { createThirdwebClient } from "thirdweb";
+import { facilitator, settlePayment } from "thirdweb/x402";
+import { sepolia } from "thirdweb/chains";
+
+const SECRET_KEY = process.env.THIRDWEB_SECRET_KEY;
+// Using the address specified by the user
+const SERVER_WALLET_ADDRESS = "0x242DfB7849544eE242b2265cA7E585bdec60456B";
+
+if (!SECRET_KEY) {
+    console.warn("THIRDWEB_SECRET_KEY is not set in environment variables. x402 payments will fail.");
+}
+
+const client = createThirdwebClient({
+    secretKey: SECRET_KEY || "invalid-key-placeholder", 
+});
+
+const thirdwebX402Facilitator = facilitator({
+    client,
+    serverWalletAddress: SERVER_WALLET_ADDRESS,
+});
+
+export const handleX402Payment = async (req: any, res: any) => {
+    try {
+        const paymentData = req.headers["x-payment"];
+        // In a real app, this URL should match the requested resource or be dynamic
+        const resourceUrl = "https://decentranews.xyz/premium-content";
+
+        const result = await settlePayment({
+            resourceUrl,
+            method: "GET",
+            paymentData,
+            payTo: SERVER_WALLET_ADDRESS,
+            network: sepolia,
+            price: "0.01", // Price in Native Token (Sepolia ETH) for testing? Or maybe standard "0.01" value. 
+                           // x402 docs say "The payment token must support either: ERC-2612 permit ... ERC-3009 sign with authorization".
+                           // Native ETH is usually not supported directly by x402 flows requiring permits/auth signatures unless wrapped.
+                           // However, for simplicity and sticking to the docs provided: "The payment token must support..."
+                           // Wait, if I use "price: '$0.01'", it usually implies USD value settled in a stablecoin.
+                           // The user prompt example had `price: "$0.01"`. I'll use that.
+            facilitator: thirdwebX402Facilitator,
+        });
+
+        if (result.status === 200) {
+            return res.json({
+                success: true,
+                data: "This is premium content unlocked via x402 payment!",
+                articleId: req.params.id,
+                timestamp: new Date().toISOString()
+            });
+        } else {
+            // Forward the 402 or other status/headers from settlePayment
+            return res.status(result.status).set(result.responseHeaders).json(result.responseBody);
+        }
+    } catch (error: any) {
+        console.error("x402 payment error:", error);
+        return res.status(500).json({ error: "Payment processing failed" });
+    }
+};
