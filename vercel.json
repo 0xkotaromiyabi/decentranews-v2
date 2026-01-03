@@ -4,11 +4,6 @@
     "installCommand": "pnpm install",
     "outputDirectory": "apps/frontend/dist",
     "framework": null,
-    "functions": {
-        "api/index.js": {
-            "includeFiles": "apps/backend/dist/**"
-        }
-    },
     "rewrites": [
         {
             "source": "/api/(.*)",
