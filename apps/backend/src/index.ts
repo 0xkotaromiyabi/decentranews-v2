@@ -33,18 +33,35 @@ const ADMINS = [
 // Configure Multer
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const uploadDir = 'uploads/';
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir);
+        // Use /tmp in serverless (Vercel) or local uploads directory
+        const uploadDir = process.env.VERCEL ? '/tmp/uploads/' : 'uploads/';
+
+        try {
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            cb(null, uploadDir);
+        } catch (err: any) {
+            console.error('Error creating upload directory:', err);
+            cb(err, uploadDir);
         }
-        cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
         cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    fileFilter: (req, file, cb) => {
+        // Accept images only
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+            return cb(new Error('Only image files are allowed!'));
+        }
+        cb(null, true);
+    }
+});
 
 // CORS Configuration - Allow frontend origins
 const allowedOrigins = [
@@ -85,7 +102,7 @@ app.use(cookieSession({
     maxAge: 24 * 60 * 60 * 1000
 }));
 
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(process.env.VERCEL ? '/tmp/uploads' : 'uploads'));
 
 app.get('/nonce', function (req: any, res) {
     req.session.nonce = generateNonce();
@@ -168,6 +185,22 @@ app.get('/articles', async (req: any, res) => {
 // x402 Payment Endpoint for Premium Articles (TEMPORARILY DISABLED - thirdweb dependency missing)
 // app.get('/articles/premium/:id', handleX402Payment);
 
+// Temporary stub for premium articles endpoint while x402 is disabled
+app.get('/articles/premium/:id', async (req: any, res) => {
+    const { id } = req.params;
+    try {
+        // For now, return a message that premium features are in development
+        res.status(503).json({
+            error: 'Premium content feature is temporarily disabled',
+            message: 'x402 payment integration is under maintenance. Please check back later.',
+            articleId: id
+        });
+    } catch (e) {
+        console.error('Error in premium endpoint:', e);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.get('/nav-pages', async (req, res) => {
     try {
         const pages = await prisma.article.findMany({
@@ -207,22 +240,39 @@ app.get('/articles/:id', async (req: any, res) => {
 });
 
 app.post('/upload', upload.single('image'), (req: any, res) => {
-    if (!req.file) {
-        return res.status(400).json({ success: 0, file: null });
-    }
-    // Use dynamic URL based on environment
-    const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN
-        ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
-        : process.env.VERCEL_URL
-            ? `https://${process.env.VERCEL_URL}`
-            : `http://localhost:${PORT}`;
-
-    res.json({
-        success: 1,
-        file: {
-            url: `${baseUrl}/uploads/${req.file.filename}`
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: 0, error: 'No file uploaded' });
         }
-    });
+
+        // Check if running in Vercel (serverless environment)
+        if (process.env.VERCEL) {
+            // Warn that local file storage won't persist in serverless
+            console.warn('WARNING: File uploaded to serverless environment. Files will be lost after function execution.');
+            console.warn('Consider using cloud storage (S3, Cloudinary, etc.) for production.');
+        }
+
+        // Use dynamic URL based on environment
+        const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN
+            ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+            : process.env.VERCEL_URL
+                ? `https://${process.env.VERCEL_URL}`
+                : `http://localhost:${PORT}`;
+
+        res.json({
+            success: 1,
+            file: {
+                url: `${baseUrl}/uploads/${req.file.filename}`
+            }
+        });
+    } catch (e: any) {
+        console.error('Upload error:', e);
+        res.status(500).json({
+            success: 0,
+            error: 'File upload failed',
+            message: e.message
+        });
+    }
 });
 
 app.post('/articles', async (req: any, res) => {

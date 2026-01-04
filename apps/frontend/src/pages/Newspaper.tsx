@@ -69,11 +69,19 @@ export function Newspaper() {
                 setUnlockedArticles(prev => ({ ...prev, [articleId]: true }));
                 setArticleContent(prev => ({ ...prev, [articleId]: data.data || "Content unlocked." }));
                 console.log("Access granted!");
+            } else if (response.status === 503) {
+                // Service temporarily unavailable
+                const errorData = await response.json().catch(() => ({ message: 'Premium content temporarily unavailable' }));
+                alert(errorData.message || 'Premium content feature is currently disabled. Please check back later.');
+                console.warn("Premium content feature disabled:", errorData);
             } else {
-                console.error("Payment failed or rejected");
+                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                console.error("Payment failed or rejected:", errorData);
+                alert('Unable to access premium content. Please try again later.');
             }
         } catch (err) {
             console.error("Error during payment flow:", err);
+            alert('An error occurred while trying to access premium content.');
         }
     };
 
