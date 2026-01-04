@@ -4,7 +4,19 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
         // Dynamic import to ensure fresh module in serverless environment
-        const { default: app } = await import('../apps/backend/dist/index.js');
+        const appModule = await import('../apps/backend/dist/index.js');
+
+        // Handle both default export and named export
+        const app = appModule.default || appModule;
+
+        // Verify app is a function
+        if (typeof app !== 'function') {
+            console.error('[API Handler] app is not a function:', typeof app, Object.keys(appModule));
+            return res.status(500).json({
+                error: 'API configuration error',
+                message: 'Express app not properly exported'
+            });
+        }
 
         // Strip /api prefix from URL since backend routes don't expect it
         if (req.url) {
