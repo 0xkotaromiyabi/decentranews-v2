@@ -103,7 +103,7 @@ See [.env.production.example](./.env.production.example) for full reference.
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Detailed deployment documentation
 - **[.env.production.example](./.env.production.example)** - Environment variables template
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 - React 18
@@ -127,7 +127,7 @@ See [.env.production.example](./.env.production.example) for full reference.
 - pnpm (Package Manager)
 - Turborepo (Monorepo)
 
-## 📝 Available Scripts
+## Available Scripts
 
 ```bash
 # Development
@@ -177,6 +177,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Support
 
 For issues and questions, please open an issue on GitHub.
+
 
 
 
