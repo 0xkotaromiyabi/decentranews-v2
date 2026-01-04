@@ -4,14 +4,21 @@ import cookieParser from 'cookie-parser';
 import cookieSession from 'cookie-session';
 import { generateNonce, SiweMessage } from 'siwe';
 import { PrismaClient } from '@prisma/client';
-import multer from 'multer';
-import path from 'path';
+import { createClient } from '@supabase/supabase-js';
+import multiparty from 'multiparty';
 import fs from 'fs';
+import path from 'path';
 // import { handleX402Payment } from './x402'; // Import the controller
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const prisma = new PrismaClient();
+
+// Initialize Supabase client
+const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!
+);
 
 const generateSlug = (text: string) => {
     return text
@@ -30,38 +37,9 @@ const ADMINS = [
     '0xdbca8ab9eb325a8f550ffc6e45277081a6c7d681'
 ];
 
-// Configure Multer
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        // Use /tmp in serverless (Vercel) or local uploads directory
-        const uploadDir = process.env.VERCEL ? '/tmp/uploads/' : 'uploads/';
-
-        try {
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
-            cb(null, uploadDir);
-        } catch (err: any) {
-            console.error('Error creating upload directory:', err);
-            cb(err, uploadDir);
-        }
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
-});
-
-const upload = multer({
-    storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-    fileFilter: (req, file, cb) => {
-        // Accept images only
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-            return cb(new Error('Only image files are allowed!'));
-        }
-        cb(null, true);
-    }
-});
+// File upload constants
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/jpg'];
 
 // CORS Configuration - Allow frontend origins
 const allowedOrigins = [
@@ -102,7 +80,7 @@ app.use(cookieSession({
     maxAge: 24 * 60 * 60 * 1000
 }));
 
-app.use('/uploads', express.static(process.env.VERCEL ? '/tmp/uploads' : 'uploads'));
+// app.use('/uploads', express.static(process.env.VERCEL ? '/tmp/uploads' : 'uploads'));
 
 app.get('/nonce', function (req: any, res) {
     req.session.nonce = generateNonce();
@@ -239,40 +217,81 @@ app.get('/articles/:id', async (req: any, res) => {
     }
 });
 
-app.post('/upload', upload.single('image'), (req: any, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ success: 0, error: 'No file uploaded' });
-        }
+app.post('/upload', (req: any, res) => {
+    const form = new multiparty.Form();
 
-        // Check if running in Vercel (serverless environment)
-        if (process.env.VERCEL) {
-            // Warn that local file storage won't persist in serverless
-            console.warn('WARNING: File uploaded to serverless environment. Files will be lost after function execution.');
-            console.warn('Consider using cloud storage (S3, Cloudinary, etc.) for production.');
-        }
-
-        // Use dynamic URL based on environment
-        const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN
-            ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
-            : process.env.VERCEL_URL
-                ? `https://${process.env.VERCEL_URL}`
-                : `http://localhost:${PORT}`;
-
-        res.json({
-            success: 1,
-            file: {
-                url: `${baseUrl}/uploads/${req.file.filename}`
+    form.parse(req, async (err: any, fields: any, files: any) => {
+        try {
+            if (err) {
+                console.error('Form parse error:', err);
+                return res.status(400).json({ success: 0, error: 'Failed to parse upload' });
             }
-        });
-    } catch (e: any) {
-        console.error('Upload error:', e);
-        res.status(500).json({
-            success: 0,
-            error: 'File upload failed',
-            message: e.message
-        });
-    }
+
+            const file = files.image?.[0];
+            if (!file) {
+                return res.status(400).json({ success: 0, error: 'No file uploaded' });
+            }
+
+            // Validate file type
+            const contentType = file.headers?.['content-type'] || '';
+            if (!ALLOWED_IMAGE_TYPES.includes(contentType)) {
+                return res.status(400).json({ success: 0, error: 'Only image files are allowed (jpg, png, gif, webp)' });
+            }
+
+            // Validate file size
+            if (file.size > MAX_FILE_SIZE) {
+                return res.status(400).json({ success: 0, error: 'File too large (max 10MB)' });
+            }
+
+            // Generate unique filename
+            const ext = path.extname(file.originalFilename || '.jpg');
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}${ext}`;
+
+            // Read file buffer
+            const fileBuffer = fs.readFileSync(file.path);
+
+            // Upload to Supabase Storage
+            const { data, error: uploadError } = await supabase.storage
+                .from('article-images')
+                .upload(fileName, fileBuffer, {
+                    contentType: contentType,
+                    upsert: false
+                });
+
+            if (uploadError) {
+                console.error('Supabase upload error:', uploadError);
+                return res.status(500).json({ success: 0, error: uploadError.message });
+            }
+
+            // Get public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('article-images')
+                .getPublicUrl(fileName);
+
+            // Clean up temp file
+            try {
+                fs.unlinkSync(file.path);
+            } catch (cleanupError) {
+                console.warn('Failed to cleanup temp file:', cleanupError);
+            }
+
+            console.log('File uploaded successfully:', publicUrl);
+
+            res.json({
+                success: 1,
+                file: {
+                    url: publicUrl
+                }
+            });
+        } catch (e: any) {
+            console.error('Upload error:', e);
+            res.status(500).json({
+                success: 0,
+                error: 'File upload failed',
+                message: e.message
+            });
+        }
+    });
 });
 
 app.post('/articles', async (req: any, res) => {
