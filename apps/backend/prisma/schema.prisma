@@ -3,35 +3,44 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id        String    @id @default(uuid())
+  id        String    @id @default(dbgenerated("gen_random_uuid()"))
   address   String    @unique
   role      String    @default("USER") // ADMIN, EDITOR, USER
   articles  Article[]
-  createdAt DateTime  @default(now())
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  
+  @@map("users")
 }
 
 model Article {
-  id          String   @id @default(uuid())
-  title       String
-  content          String
-  status           String    @default("DRAFT") // DRAFT, PUBLISHED
-  category         String    @default("General")
-  type             String    @default("POST") // POST, PAGE
-  slug             String?   @unique
-  excerpt          String?
-  featuredImage    String?
-  seoTitle         String?
-  seoDescription   String?
+  id                 String   @id @default(dbgenerated("gen_random_uuid()"))
+  title              String
+  content            String   @db.Text
+  status             String   @default("DRAFT") // DRAFT, PUBLISHED
+  category           String   @default("General")
+  type               String   @default("POST") // POST, PAGE
+  slug               String?  @unique
+  excerpt            String?  @db.Text
+  featuredImage      String?  @db.Text
+  seoTitle           String?
+  seoDescription     String?  @db.Text
   nftTransactionHash String?
-  nftMetadataUri     String?
-  publishedAt      DateTime  @default(now())
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  nftMetadataUri     String?  @db.Text
+  publishedAt        DateTime @default(now()) @db.Timestamptz(6)
+  authorId           String
+  author             User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt          DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime @updatedAt @db.Timestamptz(6)
+  
+  @@index([authorId])
+  @@index([status])
+  @@index([type])
+  @@index([slug])
+  @@map("articles")
 }
