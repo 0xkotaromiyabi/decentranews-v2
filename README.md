@@ -1,8 +1,8 @@
-# 🚀 DecentraNews - Decentralized News Platform
+# DecentraNews - Decentralized News Platform
 
 A Web3-powered news platform with NFT capabilities, built on blockchain technology.
 
-## 🏗️ Architecture
+## Architecture
 
 - **Frontend**: React + Vite + TypeScript (Deployed on Vercel)
 - **Backend**: Express + Prisma (Serverless on Vercel)
@@ -10,7 +10,7 @@ A Web3-powered news platform with NFT capabilities, built on blockchain technolo
 - **Blockchain**: Thirdweb SDK
 - **Authentication**: SIWE (Sign-In with Ethereum)
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 decentranews/
@@ -25,7 +25,7 @@ decentranews/
 └── vercel.json           # Vercel configuration
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Local Development
 
@@ -60,7 +60,7 @@ decentranews/
    - Frontend: http://localhost:5173
    - Backend: http://localhost:3000
 
-## 🌐 Production Deployment
+## Production Deployment
 
 ### Prerequisites
 - [Vercel Account](https://vercel.com)
@@ -78,7 +78,7 @@ Quick overview:
 4. Configure Vercel environment variables
 5. Deploy via Vercel
 
-## 🔑 Environment Variables
+## Environment Variables
 
 ### Backend (.env)
 ```env
@@ -97,7 +97,7 @@ VITE_API_URL="http://localhost:3000"  # For local development
 
 See [.env.production.example](./.env.production.example) for full reference.
 
-## 📚 Documentation
+## Documentation
 
 - **[DEPLOY_CHECKLIST.md](./DEPLOY_CHECKLIST.md)** - Step-by-step deployment guide
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Detailed deployment documentation
@@ -146,7 +146,7 @@ npx prisma generate   # Generate Prisma Client
 vercel --prod         # Deploy to production
 ```
 
-## 🔒 Authentication
+## Authentication
 
 The platform uses **Sign-In with Ethereum (SIWE)** for authentication:
 - Connect wallet via Thirdweb
@@ -154,30 +154,29 @@ The platform uses **Sign-In with Ethereum (SIWE)** for authentication:
 - Session-based authentication
 - Role-based access control (Admin/Editor/User)
 
-## 🎨 Features
+## Features
 
-- ✅ Web3 Wallet Authentication
-- ✅ Article Publishing System
-- ✅ NFT Minting for Articles
-- ✅ Rich Text Editor (EditorJS)
-- ✅ Image Upload
-- ✅ Crypto Price Ticker
-- ✅ Category Management
-- ✅ SEO Optimization
-- ✅ Responsive Design
+- Web3 Wallet Authentication
+- Article Publishing System
+- NFT Minting for Articles
+- Rich Text Editor (EditorJS)
+- Image Upload
+- Crypto Price Ticker
+- Category Management
+- SEO Optimization
+- Responsive Design
 
-## 📄 License
+## License
 
 MIT
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📧 Support
+## Support
 
 For issues and questions, please open an issue on GitHub.
 
----
 
-Built with ❤️ using Web3 technology
+
