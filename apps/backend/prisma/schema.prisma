@@ -11,33 +11,33 @@ datasource db {
 model User {
   id        String    @id @default(dbgenerated("gen_random_uuid()"))
   address   String    @unique
-  role      String    @default("USER") // ADMIN, EDITOR, USER
-  articles  Article[]
+  role      String    @default("USER")
   createdAt DateTime  @default(now()) @db.Timestamptz(6)
-  
+  articles  Article[]
+
   @@map("users")
 }
 
 model Article {
   id                 String   @id @default(dbgenerated("gen_random_uuid()"))
   title              String
-  content            String   @db.Text
-  status             String   @default("DRAFT") // DRAFT, PUBLISHED
+  content            String
+  status             String   @default("DRAFT")
   category           String   @default("General")
-  type               String   @default("POST") // POST, PAGE
+  type               String   @default("POST")
   slug               String?  @unique
-  excerpt            String?  @db.Text
-  featuredImage      String?  @db.Text
+  excerpt            String?
+  featuredImage      String?
   seoTitle           String?
-  seoDescription     String?  @db.Text
+  seoDescription     String?
   nftTransactionHash String?
-  nftMetadataUri     String?  @db.Text
+  nftMetadataUri     String?
   publishedAt        DateTime @default(now()) @db.Timestamptz(6)
   authorId           String
-  author             User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   createdAt          DateTime @default(now()) @db.Timestamptz(6)
   updatedAt          DateTime @updatedAt @db.Timestamptz(6)
-  
+  author             User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
   @@index([authorId])
   @@index([status])
   @@index([type])
