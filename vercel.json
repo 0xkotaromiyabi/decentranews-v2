@@ -4,6 +4,12 @@
     "installCommand": "pnpm install",
     "outputDirectory": "apps/frontend/dist",
     "framework": null,
+    "functions": {
+        "api/index.ts": {
+            "memory": 1024,
+            "maxDuration": 30
+        }
+    },
     "rewrites": [
         {
             "source": "/api/:path*",
