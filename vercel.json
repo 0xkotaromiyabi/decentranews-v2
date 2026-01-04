@@ -5,7 +5,7 @@
     "outputDirectory": "apps/frontend/dist",
     "framework": null,
     "functions": {
-        "api/index.ts": {
+        "api/index.js": {
             "memory": 1024,
             "maxDuration": 30
         }
