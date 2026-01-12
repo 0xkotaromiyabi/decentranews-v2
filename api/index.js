@@ -1,14 +1,15 @@
-import { createRequire } from 'module';
-import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Create require for ESM
 const require = createRequire(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default async function handler(req, res) {
     try {
-        // Backend builds to CommonJS, so use require() via createRequire
-        // Assuming the build command successfully built apps/backend/dist/index.js
-        const backendPath = path.resolve(process.cwd(), 'apps/backend/dist/index.js');
+        // Resolve path relative to this file (api/index.js)
+        // From api/ -> ../apps/backend/dist/index.js
+        const backendPath = path.resolve(__dirname, '../apps/backend/dist/index.js');
 
         // Note: In Vercel serverless, process.cwd() is usually the project root if configured correctly,
         // but files outside the function might not be included unless traced properly.
