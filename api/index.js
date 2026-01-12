@@ -47,12 +47,25 @@ export default async function handler(req, res) {
         return app(req, res);
     } catch (error) {
         console.error('[API] Critical error:', error);
+        // List files to debug if module not found
+        let files = [];
+        try {
+            const backendDir = path.resolve(__dirname, '../apps/backend/dist');
+            const fs = await import('fs');
+            if (fs.existsSync(backendDir)) {
+                files = fs.readdirSync(backendDir);
+            } else {
+                files = [`Directory not found: ${backendDir}`];
+            }
+        } catch (e) { files = [`Error listing files: ${e.message}`]; }
+
         return res.status(500).json({
             error: 'API handler failed',
             message: error.message,
-            // Only show stack in dev or if needed for debugging
             stack: error.stack,
-            cwd: process.cwd()
+            cwd: process.cwd(),
+            __dirname,
+            filesInBackendDist: files
         });
     }
 }
