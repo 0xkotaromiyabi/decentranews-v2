@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useBalance } from 'wagmi';
-import { parseEther } from 'viem';
+import { useWriteContract, useWaitForTransactionReceipt, useBalance } from 'wagmi';
 import { API_URL } from '../api';
 
 const REGISTRY_ADDRESS = "0x000000006551c19487814612e58FE06813775758";
@@ -32,7 +31,6 @@ export function ArticleWallet({ articleId }: ArticleWalletProps) {
     const [tbaAddress, setTbaAddress] = useState<`0x${string}` | null>(null);
     const [nftTokenId, setNftTokenId] = useState<string | null>(null);
     const [isDeployed, setIsDeployed] = useState(false);
-    const { address } = useAccount();
 
     const { data: balance } = useBalance({
         address: tbaAddress || undefined,
