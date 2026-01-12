@@ -16,9 +16,13 @@ const prisma = new PrismaClient();
 
 // Initialize Supabase client
 // Use Service Role Key for backend operations (bypasses RLS)
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+
+if (!supabase) {
+    console.warn('[Warning] Supabase client not initialized - SUPABASE_URL or SUPABASE_KEY missing');
+}
 
 const generateSlug = (text: string) => {
     return text
@@ -223,6 +227,9 @@ app.get('/articles/:id', async (req: any, res) => {
 // Debug endpoint to verify Supabase Storage connection
 app.get('/test-storage', async (req, res) => {
     try {
+        if (!supabase) {
+            return res.status(503).json({ success: 0, error: 'Supabase not configured' });
+        }
         console.log('Testing Supabase Storage connection...');
         console.log('URL:', process.env.SUPABASE_URL);
         // Don't log full key for security
@@ -257,6 +264,9 @@ app.get('/test-storage', async (req, res) => {
 // Debug endpoint to verify Supabase Storage upload
 app.get('/test-upload', async (req, res) => {
     try {
+        if (!supabase) {
+            return res.status(503).json({ success: 0, error: 'Supabase not configured' });
+        }
         console.log('Testing Supabase Storage upload...');
 
         const testFileName = `test-${Date.now()}.txt`;
@@ -282,7 +292,7 @@ app.get('/test-upload', async (req, res) => {
         }
 
         // Get public URL
-        const { data: { publicUrl } } = supabase.storage
+        const { data: { publicUrl } } = supabase!.storage
             .from('article-images')
             .getPublicUrl(testFileName);
 
@@ -334,6 +344,9 @@ app.post('/upload', (req: any, res) => {
             const fileBuffer = fs.readFileSync(file.path);
 
             // Upload to Supabase Storage
+            if (!supabase) {
+                return res.status(503).json({ success: 0, error: 'Supabase not configured' });
+            }
             const { data, error: uploadError } = await supabase.storage
                 .from('article-images')
                 .upload(fileName, fileBuffer, {
@@ -347,7 +360,7 @@ app.post('/upload', (req: any, res) => {
             }
 
             // Get public URL
-            const { data: { publicUrl } } = supabase.storage
+            const { data: { publicUrl } } = supabase!.storage
                 .from('article-images')
                 .getPublicUrl(fileName);
 

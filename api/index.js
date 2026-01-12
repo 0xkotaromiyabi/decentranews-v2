@@ -1,43 +1,22 @@
-const path = require('path');
+const app = require('express')();
 
-// Export as Vercel serverless function
-module.exports = async function handler(req, res) {
-    try {
-        // Backend builds to CommonJS, so use require()
-        const backendPath = path.join(__dirname, '../apps/backend/dist/index.js');
+app.get('/', (req, res) => {
+    res.status(200).json({ status: 'ok', message: 'API Root is working' });
+});
 
-        // Clear cache for fresh instance in serverless
-        delete require.cache[require.resolve(backendPath)];
+app.get('/articles', (req, res) => {
+    res.status(200).json([
+        { id: 1, title: 'Test Article from Vercel', status: 'debug' }
+    ]);
+});
 
-        // Require the Express app
-        const appModule = require(backendPath);
-        const app = appModule.default || appModule;
+// Catch-all for other routes
+app.all('*', (req, res) => {
+    res.status(200).json({
+        path: req.path,
+        query: req.query,
+        message: 'Endpoint reachable but not implemented in debug mode'
+    });
+});
 
-        // Verify it's a function (Express app)
-        if (typeof app !== 'function') {
-            console.error('[API] Not a function:', typeof app, 'Keys:', Object.keys(appModule));
-            return res.status(500).json({
-                error: 'API configuration error',
-                message: 'Backend not properly configured',
-                debug: { type: typeof app, hasDefault: !!appModule.default }
-            });
-        }
-
-        // Strip /api prefix
-        if (req.url) {
-            const originalUrl = req.url;
-            req.url = req.url.replace(/^\/api/, '') || '/';
-            console.log(`[API] ${req.method} ${originalUrl} -> ${req.url}`);
-        }
-
-        // Call Express app
-        return app(req, res);
-    } catch (error) {
-        console.error('[API] Critical error:', error);
-        return res.status(500).json({
-            error: 'API handler failed',
-            message: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
-    }
-};
+module.exports = app;
