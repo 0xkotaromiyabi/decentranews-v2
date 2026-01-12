@@ -8,7 +8,12 @@ import { createClient } from '@supabase/supabase-js';
 import multiparty from 'multiparty';
 import fs from 'fs';
 import path from 'path';
-// import { handleX402Payment } from './x402'; // Import the controller
+import path from 'path';
+import { getArticleAccount } from './services/tba/tbaService';
+
+// Contract Addresses (Placeholders - Update after deployment)
+const WRITENFT_ADDRESS = process.env.WRITENFT_ADDRESS || "0x0000000000000000000000000000000000000000";
+const TBA_IMPLEMENTATION_ADDRESS = process.env.TBA_IMPLEMENTATION_ADDRESS || "0x0000000000000000000000000000000000000000";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -222,6 +227,38 @@ app.get('/articles/:id', async (req: any, res) => {
         console.error('Error fetching article:', e);
         res.status(500).json({ error: 'Internal error' });
     }
+}
+});
+
+// GET /articles/:id/wallet - Get TBA Address
+app.get('/articles/:id/wallet', async (req: any, res) => {
+    const { id } = req.params;
+    try {
+        const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+        const article = await prisma.article.findUnique({
+            where: isUUID ? { id } : { slug: id }
+        });
+
+        if (!article || !article.nftTokenId) {
+            return res.status(404).json({ error: 'Article or Wallet not found (Not minted yet)' });
+        }
+
+        // Compute TBA address
+        const tbaAddress = await getArticleAccount(
+            TBA_IMPLEMENTATION_ADDRESS,
+            WRITENFT_ADDRESS,
+            article.nftTokenId
+        );
+
+        res.json({
+            address: tbaAddress,
+            tokenId: article.nftTokenId,
+            deployed: false // We can check bytecode size here if needed in future
+        });
+    } catch (e: any) {
+        console.error('Error fetching TBA:', e);
+        res.status(500).json({ error: 'Failed to fetch wallet info' });
+    }
 });
 
 // Debug endpoint to verify Supabase Storage connection
@@ -391,7 +428,7 @@ app.post('/upload', (req: any, res) => {
 });
 
 app.post('/articles', async (req: any, res) => {
-    const { title, content, status, category, type, slug, excerpt, featuredImage, seoTitle, seoDescription, nftTransactionHash, nftMetadataUri } = req.body;
+    const { title, content, status, category, type, slug, excerpt, featuredImage, seoTitle, seoDescription, nftTransactionHash, nftMetadataUri, nftTokenId } = req.body;
     let address = req.session?.siwe?.address || ADMINS[0];
 
     try {
@@ -422,7 +459,9 @@ app.post('/articles', async (req: any, res) => {
                 seoTitle,
                 seoDescription,
                 nftTransactionHash,
+                nftTransactionHash,
                 nftMetadataUri,
+                nftTokenId,
                 publishedAt: new Date(),
                 authorId: user.id
             }
@@ -437,7 +476,7 @@ app.post('/articles', async (req: any, res) => {
 app.put('/articles/:id', async (req: any, res) => {
     const { id } = req.params;
     try {
-        const { title, content, status, category, type, slug, excerpt, featuredImage, seoTitle, seoDescription, nftTransactionHash, nftMetadataUri } = req.body;
+        const { title, content, status, category, type, slug, excerpt, featuredImage, seoTitle, seoDescription, nftTransactionHash, nftMetadataUri, nftTokenId } = req.body;
 
         const data: any = {
             title,
@@ -450,7 +489,9 @@ app.put('/articles/:id', async (req: any, res) => {
             seoTitle,
             seoDescription,
             nftTransactionHash,
-            nftMetadataUri
+            nftTransactionHash,
+            nftMetadataUri,
+            nftTokenId
         };
 
         if (slug) {

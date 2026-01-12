@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import { API_URL } from '../api';
+import { ArticleWallet } from '../components/ArticleWallet';
 
 const BlockRenderer = ({ blocks }: { blocks: any[] }) => {
     return (
@@ -121,6 +122,8 @@ export function PostDetail() {
                             </div>
                         </div>
                     )}
+
+                    {article.id && <ArticleWallet articleId={article.id} />}
                 </div>
             </header>
 

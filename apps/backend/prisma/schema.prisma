@@ -32,6 +32,7 @@ model Article {
   seoDescription     String?
   nftTransactionHash String?
   nftMetadataUri     String?
+  nftTokenId         String?   // Stores the ERC-721 Token ID for TBA resolution
   publishedAt        DateTime @default(now()) @db.Timestamptz(6)
   authorId           String
   createdAt          DateTime @default(now()) @db.Timestamptz(6)
