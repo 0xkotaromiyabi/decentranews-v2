@@ -138,6 +138,10 @@ export function Dashboard() {
     }, [view, editingId, articles]);
 
     const handleEdit = (article: any) => {
+        if (article.nftTokenId) {
+            alert("This article has been minted as an NFT and is immutable.");
+            return;
+        }
         setEditingId(article.id);
         setTitle(article.title);
         setStatus(article.status || 'DRAFT');
@@ -313,9 +317,16 @@ export function Dashboard() {
                             {filteredArticles.map((article: any) => (
                                 <tr key={article.id} className="hover:bg-gray-50 group transition-colors">
                                     <td className="px-6 py-5">
-                                        <div className="font-semibold text-blue-600 hover:text-blue-800 cursor-pointer text-lg mb-1" onClick={() => handleEdit(article)}>{article.title}</div>
+                                        <div className="font-semibold text-blue-600 hover:text-blue-800 cursor-pointer text-lg mb-1" onClick={() => !article.nftTokenId && handleEdit(article)}>
+                                            {article.title}
+                                            {article.nftTokenId && <span className="ml-2 text-xs text-gray-400 font-normal bg-gray-100 px-2 py-0.5 rounded-full">Immutable</span>}
+                                        </div>
                                         <div className="flex gap-3 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <span className="text-blue-600 cursor-pointer hover:font-bold" onClick={() => handleEdit(article)}>Edit</span>
+                                            {article.nftTokenId ? (
+                                                <span className="text-gray-400 cursor-not-allowed" title="Content is immutable on-chain">Locked</span>
+                                            ) : (
+                                                <span className="text-blue-600 cursor-pointer hover:font-bold" onClick={() => handleEdit(article)}>Edit</span>
+                                            )}
                                             <Link to={article.type === 'PAGE' ? `/page/${article.slug || article.id}` : `/post/${article.slug || article.id}`} target="_blank" className="text-gray-600 cursor-pointer shadow-sm hover:font-bold border px-1 rounded">View</Link>
                                             <span className="text-red-600 cursor-pointer hover:font-bold" onClick={() => { if (confirm('Delete?')) deleteMutation.mutate(article.id) }}>Trash</span>
                                         </div>
