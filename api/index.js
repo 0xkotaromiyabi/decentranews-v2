@@ -1,5 +1,17 @@
 import { fileURLToPath } from 'url';
 
+// Force Vercel to bundle these dependencies (they are used by the dynamic backend require)
+import 'express';
+import 'cors';
+import 'cookie-parser';
+import 'cookie-session';
+import 'siwe';
+import '@prisma/client';
+import '@supabase/supabase-js';
+import 'multiparty';
+import 'thirdweb';
+import 'dotenv';
+
 // Create require for ESM
 const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
