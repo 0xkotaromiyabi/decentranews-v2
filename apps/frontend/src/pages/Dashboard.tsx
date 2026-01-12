@@ -316,7 +316,7 @@ export function Dashboard() {
                                         <div className="font-semibold text-blue-600 hover:text-blue-800 cursor-pointer text-lg mb-1" onClick={() => handleEdit(article)}>{article.title}</div>
                                         <div className="flex gap-3 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
                                             <span className="text-blue-600 cursor-pointer hover:font-bold" onClick={() => handleEdit(article)}>Edit</span>
-                                            <Link to={article.type === 'PAGE' ? `/page/${article.id}` : `/post/${article.id}`} target="_blank" className="text-gray-600 cursor-pointer shadow-sm hover:font-bold border px-1 rounded">View</Link>
+                                            <Link to={article.type === 'PAGE' ? `/page/${article.slug || article.id}` : `/post/${article.slug || article.id}`} target="_blank" className="text-gray-600 cursor-pointer shadow-sm hover:font-bold border px-1 rounded">View</Link>
                                             <span className="text-red-600 cursor-pointer hover:font-bold" onClick={() => { if (confirm('Delete?')) deleteMutation.mutate(article.id) }}>Trash</span>
                                         </div>
                                     </td>

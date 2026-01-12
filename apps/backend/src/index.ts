@@ -15,10 +15,10 @@ const PORT = process.env.PORT || 3000;
 const prisma = new PrismaClient();
 
 // Initialize Supabase client
-const supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!
-);
+// Use Service Role Key for backend operations (bypasses RLS)
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const generateSlug = (text: string) => {
     return text
@@ -201,19 +201,102 @@ app.get('/articles/:id', async (req: any, res) => {
     const { id } = req.params;
     console.log(`--- GET /articles/${id} Request Received ---`);
     try {
+        const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+
         const article = await prisma.article.findUnique({
-            where: { id },
+            where: isUUID ? { id } : { slug: id },
             include: { author: true }
         });
+
         if (!article) {
-            console.log(`Article with ID ${id} not found.`);
+            console.log(`Article with ${isUUID ? 'ID' : 'slug'} ${id} not found.`);
             return res.status(404).json({ error: 'Not found' });
         }
-        console.log(`Article with ID ${id} found:`, article.title);
+        console.log(`Article found:`, article.title);
         res.json(article);
     } catch (e) {
         console.error('Error fetching article:', e);
         res.status(500).json({ error: 'Internal error' });
+    }
+});
+
+// Debug endpoint to verify Supabase Storage connection
+app.get('/test-storage', async (req, res) => {
+    try {
+        console.log('Testing Supabase Storage connection...');
+        console.log('URL:', process.env.SUPABASE_URL);
+        // Don't log full key for security
+        console.log('Key present:', !!process.env.SUPABASE_ANON_KEY);
+
+        const { data, error } = await supabase.storage.listBuckets();
+
+        if (error) {
+            console.error('Supabase List Buckets Error:', error);
+            return res.status(500).json({
+                success: 0,
+                error: 'Failed to list buckets',
+                details: error.message
+            });
+        }
+
+        const bucket = data.find(b => b.name === 'article-images');
+
+        res.json({
+            success: 1,
+            message: 'Supabase Storage Connected',
+            buckets: data.map(b => b.name),
+            targetBucketExists: !!bucket,
+            bucketDetails: bucket
+        });
+    } catch (e: any) {
+        console.error('Storage Test Error:', e);
+        res.status(500).json({ success: 0, error: e.message, stack: e.stack });
+    }
+});
+
+// Debug endpoint to verify Supabase Storage upload
+app.get('/test-upload', async (req, res) => {
+    try {
+        console.log('Testing Supabase Storage upload...');
+
+        const testFileName = `test-${Date.now()}.txt`;
+        const fileContent = 'Hello Supabase Storage!';
+
+        // Try to upload directly
+        const { data, error } = await supabase.storage
+            .from('article-images')
+            .upload(testFileName, fileContent, {
+                contentType: 'text/plain',
+                upsert: true
+            });
+
+        if (error) {
+            console.error('Supabase Upload Test Error:', error);
+            // Check for specific row security violation error
+            return res.status(500).json({
+                success: 0,
+                message: 'Upload Failed',
+                error: error.message,
+                details: error
+            });
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+            .from('article-images')
+            .getPublicUrl(testFileName);
+
+        res.json({
+            success: 1,
+            message: 'Supabase Storage Verified',
+            uploadResult: data,
+            publicUrl: publicUrl,
+            bucket: 'article-images'
+        });
+
+    } catch (e: any) {
+        console.error('Storage Test Error:', e);
+        res.status(500).json({ success: 0, error: e.message, stack: e.stack });
     }
 });
 

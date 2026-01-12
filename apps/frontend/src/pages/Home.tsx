@@ -48,7 +48,7 @@ export function Home() {
                                     <span className="text-gray-300">•</span>
                                     <span>{new Date(article.publishedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                                 </div>
-                                <Link to={`/post/${article.id}`} className="block group-hover:text-blue-700 transition-colors">
+                                <Link to={`/post/${article.slug || article.id}`} className="block group-hover:text-blue-700 transition-colors">
                                     <h3 className="text-3xl font-bold font-serif leading-tight mb-4 group-hover:underline decoration-blue-600/30 underline-offset-4">{article.title}</h3>
                                 </Link>
 
@@ -65,7 +65,7 @@ export function Home() {
                             </div>
 
                             {article.featuredImage && (
-                                <Link to={`/post/${article.id}`} className="block overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-all">
+                                <Link to={`/post/${article.slug || article.id}`} className="block overflow-hidden rounded-xl shadow-sm hover:shadow-md transition-all">
                                     <img
                                         src={article.featuredImage}
                                         alt={article.title}
