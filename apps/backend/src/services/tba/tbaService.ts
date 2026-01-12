@@ -1,10 +1,20 @@
 import { createThirdwebClient, getContract, readContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 
+// Validate Thirdweb credentials
+const THIRDWEB_CLIENT_ID = process.env.THIRDWEB_CLIENT_ID;
+const THIRDWEB_SECRET_KEY = process.env.THIRDWEB_SECRET_KEY;
+
+if (!THIRDWEB_CLIENT_ID && !THIRDWEB_SECRET_KEY) {
+    throw new Error(
+        'Thirdweb credentials not configured. Set THIRDWEB_CLIENT_ID or THIRDWEB_SECRET_KEY in environment variables.'
+    );
+}
+
 // Initialize Thirdweb Client
 const client = createThirdwebClient({
-    clientId: process.env.THIRDWEB_CLIENT_ID || "",
-    secretKey: process.env.THIRDWEB_SECRET_KEY || "",
+    clientId: THIRDWEB_CLIENT_ID,
+    secretKey: THIRDWEB_SECRET_KEY,
 });
 
 // Configure Chain (Sepolia)
