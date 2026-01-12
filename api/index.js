@@ -1,4 +1,6 @@
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+import path from 'path';
 
 // Force Vercel to bundle these dependencies (they are used by the dynamic backend require)
 import 'express';
@@ -19,13 +21,9 @@ const __dirname = path.dirname(__filename);
 
 export default async function handler(req, res) {
     try {
-        // Resolve path relative to this file (api/index.js)
-        // From api/ -> ../apps/backend/dist/index.js
+        // Backend builds to CommonJS, so use require() via createRequire
+        // Using explicit relative path from __dirname (api/) to dist (apps/backend/dist)
         const backendPath = path.resolve(__dirname, '../apps/backend/dist/index.js');
-
-        // Note: In Vercel serverless, process.cwd() is usually the project root if configured correctly,
-        // but files outside the function might not be included unless traced properly.
-        // Since this is a monorepo, Vercel *should* bundle the necessary files if it detects the require.
 
         // Clear cache for fresh instance in serverless
         try {
@@ -33,10 +31,6 @@ export default async function handler(req, res) {
         } catch (e) {
             // Ignore if strictly not found yet, module load will fail below
         }
-
-        // Validate file existence (optional but confirms path issues)
-        // const fs = require('fs');
-        // if (!fs.existsSync(backendPath)) { ... }
 
         // Require the Express app
         const appModule = require(backendPath);
@@ -46,7 +40,7 @@ export default async function handler(req, res) {
             console.error('[API] Not a function:', typeof app);
             return res.status(500).json({
                 error: 'API configuration error',
-                message: 'Backend loaded but is not a function function'
+                message: 'Backend loaded but is not a function'
             });
         }
 
@@ -59,7 +53,8 @@ export default async function handler(req, res) {
         return app(req, res);
     } catch (error) {
         console.error('[API] Critical error:', error);
-        // List files to debug if module not found
+
+        // Detailed debug info for Vercel logs
         let files = [];
         try {
             const backendDir = path.resolve(__dirname, '../apps/backend/dist');
