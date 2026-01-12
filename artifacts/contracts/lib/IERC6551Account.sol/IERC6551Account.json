@@ -1,5 +1,5 @@
 {
-  "_format": "hh3-artifact-1",
+  "_format": "hh-sol-artifact-1",
   "contractName": "IERC6551Account",
   "sourceName": "contracts/lib/IERC6551Account.sol",
   "abi": [
@@ -71,8 +71,5 @@
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "linkReferences": {},
-  "deployedLinkReferences": {},
-  "immutableReferences": {},
-  "inputSourceName": "project/contracts/lib/IERC6551Account.sol",
-  "buildInfoId": "solc-0_8_28-4bc73337f03207b2dc3da90a7e4e5d78aabe7052"
+  "deployedLinkReferences": {}
 }

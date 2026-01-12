@@ -4,9 +4,9 @@ import { parseEther } from 'viem';
 import { API_URL } from '../api';
 
 const REGISTRY_ADDRESS = "0x000000006551c19487814612e58FE06813775758";
-const IMPLEMENTATION_ADDRESS = "0x0000000000000000000000000000000000000000"; // Placeholder - needs update
-const WRITENFT_ADDRESS = "0x0000000000000000000000000000000000000000"; // Placeholder - needs update
-const CHAIN_ID = 84532; // Base Sepolia
+const IMPLEMENTATION_ADDRESS = "0x06bEc870ba57090d10F129bCA7520110FCC048D5";
+const WRITENFT_ADDRESS = "0xFD65f229f0950E8D27cB1D135fe26B954058d2Af";
+const CHAIN_ID = 11155111; // Sepolia
 
 const REGISTRY_ABI = [
     {
@@ -101,7 +101,7 @@ export function ArticleWallet({ articleId }: ArticleWalletProps) {
                 )}
 
                 <a
-                    href={`https://sepolia.basescan.org/address/${tbaAddress}`}
+                    href={`https://sepolia.etherscan.io/address/${tbaAddress}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="border border-gray-300 px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-white transition-colors"

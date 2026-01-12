@@ -1,40 +1,44 @@
-import { formatEther, parseEther } from "viem";
-import hre from "hardhat";
+import { ethers } from "hardhat";
 
 async function main() {
-    const [deployer] = await hre.viem.getWalletClients();
-    const publicClient = await hre.viem.getPublicClient();
+    const [deployer] = await ethers.getSigners();
 
-    console.log(
-        `Deploying contracts with the account: ${deployer.account.address}`
-    );
+    console.log("Deploying contracts with the account:", deployer.address);
 
     // 1. Deploy Implementation (ERC6551 Account)
     console.log("Deploying ERC6551Account implementation...");
-    const accountImpl = await hre.viem.deployContract("ERC6551Account");
-    console.log(`ERC6551Account deployed to ${accountImpl.address}`);
+    const Account = await ethers.getContractFactory("ERC6551Account");
+    const accountImpl = await Account.deploy();
+    await accountImpl.waitForDeployment();
+    const accountImplAddress = await accountImpl.getAddress();
+    console.log(`ERC6551Account deployed to ${accountImplAddress}`);
 
     // 2. Deploy WriteNFT (Identity)
     console.log("Deploying WriteNFT...");
-    const writeNFT = await hre.viem.deployContract("WriteNFT", [deployer.account.address]);
-    console.log(`WriteNFT deployed to ${writeNFT.address}`);
+    const WriteNFT = await ethers.getContractFactory("WriteNFT");
+    const writeNFT = await WriteNFT.deploy(deployer.address);
+    await writeNFT.waitForDeployment();
+    const writeNFTAddress = await writeNFT.getAddress();
+    console.log(`WriteNFT deployed to ${writeNFTAddress}`);
 
     // 3. Deploy TBAManager (Optional Helper)
-    // We need standard Registry address. For Base Sepolia:
-    const REGISTRY_ADDRESS = "0x000000006551c19487814612e58FE06813775758"; // Standard v3 Registry
+    const REGISTRY_ADDRESS = "0x000000006551c19487814612e58FE06813775758";
 
     console.log("Deploying TBAManager...");
-    const tbaManager = await hre.viem.deployContract("TBAManager", [
+    const TBAManager = await ethers.getContractFactory("TBAManager");
+    const tbaManager = await TBAManager.deploy(
         REGISTRY_ADDRESS,
-        accountImpl.address
-    ]);
-    console.log(`TBAManager deployed to ${tbaManager.address}`);
+        accountImplAddress
+    );
+    await tbaManager.waitForDeployment();
+    const tbaManagerAddress = await tbaManager.getAddress();
+    console.log(`TBAManager deployed to ${tbaManagerAddress}`);
 
     console.log("\nVerified Deployments:");
     console.log("-----------------------------------");
-    console.log(`Implementation : ${accountImpl.address}`);
-    console.log(`WriteNFT       : ${writeNFT.address}`);
-    console.log(`TBAManager     : ${tbaManager.address}`);
+    console.log(`Implementation : ${accountImplAddress}`);
+    console.log(`WriteNFT       : ${writeNFTAddress}`);
+    console.log(`TBAManager     : ${tbaManagerAddress}`);
     console.log(`Registry       : ${REGISTRY_ADDRESS}`);
 }
 

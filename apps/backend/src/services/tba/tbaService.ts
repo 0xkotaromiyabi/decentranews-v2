@@ -9,8 +9,8 @@ const client = createThirdwebClient({
     secretKey: process.env.THIRDWEB_SECRET_KEY || "",
 });
 
-// Configure Chain (Base Sepolia)
-export const chain = defineChain(84532);
+// Configure Chain (Sepolia)
+export const chain = defineChain(11155111);
 
 // Standard ERC-6551 Registry
 const REGISTRY_ADDRESS = "0x000000006551c19487814612e58FE06813775758";

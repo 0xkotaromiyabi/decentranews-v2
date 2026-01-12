@@ -15,7 +15,7 @@ export interface IERC6551Registry$Type {
   readonly deployedLinkReferences: {};
   readonly immutableReferences: {};
   readonly inputSourceName: "project/contracts/lib/IERC6551Registry.sol";
-  readonly buildInfoId: "solc-0_8_28-4bc73337f03207b2dc3da90a7e4e5d78aabe7052";
+  readonly buildInfoId: "solc-0_8_28-9bf3c53d5903294910ddae44f80368016655cef3";
 };
 
 import "hardhat/types/artifacts";
