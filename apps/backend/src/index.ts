@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import multiparty from 'multiparty';
 import fs from 'fs';
 import path from 'path';
-import path from 'path';
+
 import { getArticleAccount } from './services/tba/tbaService';
 
 // Contract Addresses (Placeholders - Update after deployment)
@@ -227,7 +227,7 @@ app.get('/articles/:id', async (req: any, res) => {
         console.error('Error fetching article:', e);
         res.status(500).json({ error: 'Internal error' });
     }
-}
+
 });
 
 // GET /articles/:id/wallet - Get TBA Address
@@ -459,7 +459,7 @@ app.post('/articles', async (req: any, res) => {
                 seoTitle,
                 seoDescription,
                 nftTransactionHash,
-                nftTransactionHash,
+
                 nftMetadataUri,
                 nftTokenId,
                 publishedAt: new Date(),
@@ -489,7 +489,7 @@ app.put('/articles/:id', async (req: any, res) => {
             seoTitle,
             seoDescription,
             nftTransactionHash,
-            nftTransactionHash,
+
             nftMetadataUri,
             nftTokenId
         };

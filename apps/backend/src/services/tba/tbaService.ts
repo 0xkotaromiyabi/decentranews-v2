@@ -1,7 +1,5 @@
-import { createThirdwebClient, getContract, prepareContractCall } from "thirdweb";
+import { createThirdwebClient, getContract, readContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
-import { eth_call } from "thirdweb/rpc";
-import { getContractEvents } from "thirdweb/event";
 
 // Initialize Thirdweb Client
 const client = createThirdwebClient({
@@ -64,12 +62,16 @@ export async function getArticleAccount(
     tokenContract: string,
     tokenId: string
 ): Promise<string> {
-    const account = await registryContract.read.account([
-        implementationAddress,
-        "0x0000000000000000000000000000000000000000000000000000000000000000", // salt = 0
-        BigInt(chain.id),
-        tokenContract,
-        BigInt(tokenId)
-    ]);
+    const account = await readContract({
+        contract: registryContract,
+        method: "account",
+        params: [
+            implementationAddress,
+            "0x0000000000000000000000000000000000000000000000000000000000000000", // salt = 0
+            BigInt(chain.id),
+            tokenContract,
+            BigInt(tokenId)
+        ]
+    });
     return account;
 }
